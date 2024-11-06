@@ -1,0 +1,32 @@
+<mujoco model="right_faive_6dofbase">
+    <!-- add a 6DoF floating base to the hand so that the hand can be moved around in space -->
+    <compiler angle="radian"/>
+    <worldbody>
+        <body name="6dof_root">
+            <joint name="6dof_x" type="slide" axis="1 0 0" pos="0.0 0.0 0.0" range="-0.25 0.25" damping="50.0"/>
+            <joint name="6dof_y" type="slide" axis="0 1 0" pos="0.0 0.0 0.0" range="-0.25 0.25" damping="50.0"/>
+            <joint name="6dof_z" type="slide" axis="0 0 1" pos="0.0 0.0 0.0" range="0.0 0.4" damping="50.0"/>
+            <joint name="6dof_rx" type="hinge" axis="1 0 0" range="-1.57 1.57" damping="2.5"/>
+            <joint name="6dof_ry" type="hinge" axis="0 1 0" range="-1.57 1.57" damping="2.5"/>
+            <joint name="6dof_rz" type="hinge" axis="0 0 1" range="-1.57 1.57" damping="2.5"/>
+            <include file="faive_structure_p2.xml"/>
+        </body>
+    </worldbody>
+    <actuator>
+        <position name="6dof_x" joint="6dof_x" forcelimited="false" ctrlrange="-0.25 0.25" kp="800.0"/>
+        <position name="6dof_y" joint="6dof_y" forcelimited="false" ctrlrange="-0.25 0.25" kp="800.0"/>
+        <position name="6dof_z" joint="6dof_z" forcelimited="false" ctrlrange="0.0 0.4" kp="800.0"/>
+        <position name="6dof_rx" joint="6dof_rx" forcelimited="false" ctrlrange="-1.57 1.57" kp="50.0"/>
+        <position name="6dof_ry" joint="6dof_ry" forcelimited="false" ctrlrange="-1.57 1.57" kp="50.0"/>
+        <position name="6dof_rz" joint="6dof_rz" forcelimited="false" ctrlrange="-1.57 1.57" kp="50.0"/>
+    </actuator>
+    <sensor>
+        <jointpos name="6dof_x" joint="6dof_x"/>
+        <jointpos name="6dof_y" joint="6dof_y"/>
+        <jointpos name="6dof_z" joint="6dof_z"/>
+        <jointpos name="6dof_rx" joint="6dof_rx"/>
+        <jointpos name="6dof_ry" joint="6dof_ry"/>
+        <jointpos name="6dof_rz" joint="6dof_rz"/>
+    </sensor>
+    <include file="faive_metadata_p2.xml"/>
+</mujoco>

@@ -1,0 +1,11 @@
+launch:
+  - node:
+      pkg: "hand_controller_ros"
+      exec: "hand_controller_node.py"
+      name: "hand_controller_node"
+      output: "log" # change to "screen" for debugging
+      param:
+        - name: "hand_controller/port"
+          value: "/dev/ttyUSB0"
+        - name: "hand_controller_tracker/baudrate"
+          value: 3000000
