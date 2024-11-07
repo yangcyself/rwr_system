@@ -31,8 +31,9 @@ To get started with the RWR System, follow these steps:
 
     5. Install the necessary dependencies:
         ```bash
-        pip install .[all]
+        pip install -e .[all]
         ```
+        this will install the faive_system package in your enviroment, and all the required dependencies specified in the `project.toml` file 
 
 
 ## Main TODOs for RWR students
@@ -105,7 +106,7 @@ The `grasp_gui.py` script is useful for testing your `hand_control`. Ensure you 
 
 To start recording, use:
 ```bash
-ros2 run logger_ros logger_node.py
+ros2 run logger logger_node.py
 ```
 Select the list of topics to record in the code. Additionally, you can use the `record_demonstrations.launch.py` file to launch all the required nodes while recording.
 ### Other Packages
@@ -115,6 +116,7 @@ The project is organized into two main folders: one containing all the Python sc
 #### Hand Control
 
 Significant modifications are required for the hand control package. Refer to the workshop materials for guidance on controlling the hand.
+We left the code in the package as reference or hint to implement your own kinematics and hand_controller. 
 
 #### Ingress
 
@@ -132,9 +134,9 @@ This component handles the stream from the gloves.
 
 #### Retargeter
 
-There are two folders: `retargeter` (source code) and `retargeter_ros` (node). Your code should be placed in the `retargeter.py` file. Follow the provided hints to adapt it, or develop your own retargeting method.
+ Your code should be placed in the `retargeter.py` file. Follow the provided hints to adapt it, or develop your own retargeting method.
 
-- **RetargeterNode**: Subscribes to `/ingress/mano` and publishes to `/faive/policy_output` (you can rename this based on your hand model).
+- **RetargeterNode**: Subscribes to `/ingress/mano` and publishes to `/hand/policy_output` (you can rename this based on your hand model).
 
 #### Viz
 visualization helper functions, have a look at visualize_joints.py to see how to visualize both rolling contact and pin joints in rviz

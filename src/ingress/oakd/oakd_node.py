@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
 from threading import RLock
-from src.ingress.oakd.oakd_ingress import OakDDriver
+from oakd_ingress import OakDDriver
 from copy import deepcopy
 import time
 

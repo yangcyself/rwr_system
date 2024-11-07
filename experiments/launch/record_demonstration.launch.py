@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": True, "side_view": True, "wrist_view": False}
+cameras = {"front_view": True, "side_view": False, "wrist_view": False}
 
 
 def generate_launch_description():
@@ -39,13 +39,13 @@ def generate_launch_description():
             # HAND CONTROLLER NODE
             Node(
                 package="hand_control",
-                executable="hand_controller_node.py",
-                name="hand_controller_node",
+                executable="hand_control_node.py",
+                name="hand_control_node",
             ),
             
             # RETARGET NODE
             Node(
-                package="retargeter_ros",
+                package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
                 output="log",

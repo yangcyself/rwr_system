@@ -1,0 +1,17 @@
+launch:
+  - node:
+      pkg: "faive_mano_retarget_ros"
+      exec: "retargeter.py"
+      name: "rokoko_node"
+      output: "log" # change to "screen" for debugging
+      param:
+        - name: "rokoko_tracker/ip"
+          value: "0.0.0.0"
+        - name: "rokoko_tracker/port"
+          value: 14043
+        - name: "rokoko_tracker/use_coil"
+          value: true
+        - name: "retarget/mjcf_filepath"
+          value: "$(find-pkg-share viz)/models/faive_hand_p4/hand_p4.xml"
+        - name: "retarget/hand_scheme"
+          value: "p4"

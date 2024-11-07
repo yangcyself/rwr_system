@@ -18,6 +18,9 @@ np.set_printoptions(precision=3, suppress=True)
 GUI for grasping objects control
 options: --debug, --calibrate, --sim
 """
+###################################################
+#TODO: Just an example file, you need to adapt it to your hand
+###################################################
 
 grasp_type = 0
 
@@ -400,7 +403,6 @@ class GraspGUI:
 @click.command()
 @click.option('--debug', is_flag=True, default=False, help='Debug mode.')
 @click.option('--calibrate', is_flag=True, default=False, help='Calibration mode')
-@click.option('--sim', is_flag=True, default=False, help='use MuJoCo simulation')
 def main(debug, calibrate, sim):
     if sim:
         hc = HandControllerMujocoSim()

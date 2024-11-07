@@ -1,3 +1,3 @@
-from .hand_control.dynamixel_client import DynamixelIndirectClient, HardwareErrorStatus
-from .hand_control.finger_kinematics import *
-from .hand_control.hand_controller import *
+from .dynamixel_client import DynamixelIndirectClient, HardwareErrorStatus
+from .finger_kinematics import *
+from .hand_controller import *
