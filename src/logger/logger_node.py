@@ -15,7 +15,7 @@ from rclpy.serialization import serialize_message
 # Define supported topics and message types
 topics_types = {
     "/franka/end_effector_pose": PoseStamped,
-    "/faive/policy_output": Float32MultiArray,
+    "/hand/policy_output": Float32MultiArray,
     "/oakd_front_view/color": Image,
     "/oakd_side_view/color": Image,
     "/oakd_wrist_view/color": Image,
@@ -145,7 +145,7 @@ def main(args=None):
     base_path = "recordings"  # Modify this path as needed
 
     # Load topics to record (for demonstration, using hardcoded list)
-    topics_to_record = ['/oakd_side_view/color']
+    topics_to_record = ['/oakd_front_view/color', '/hand/policy_output']
 
     # Initialize ROS and create DemoLogger instance
     rclpy.init(args=args)
