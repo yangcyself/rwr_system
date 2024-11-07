@@ -141,6 +141,25 @@ This component handles the stream from the gloves.
 #### Viz
 visualization helper functions, have a look at visualize_joints.py to see how to visualize both rolling contact and pin joints in rviz
 
+
+### Example: Run Teleop and Collect Data
+
+1. Run the launch file with all the nodes you want to run (e.g., `record_demonstration.launch.py`). You may need to modify this for your specific needs.
+2. Run the teleop script:
+    ```bash
+    ros2 run experiments run_teleop_rokoko.py
+    ```
+    The calibration follows three steps:
+    - The robot goes to the initial pose.
+    - Calibrate the robot's initial pose once reached.
+    - Mimic the robot pose with the glove, then calibrate the glove pose.
+    - Now you have control of the robot (be careful!).
+3. Run the logging script:
+    ```bash
+    ros2 run logger logger_node.py
+    ```
+    Prompt the correct task name.
+
 ## Contributing
 If you would like to contribute to the RWR System, please fork the repository and submit a pull request. We welcome all contributions and improvements.
 
