@@ -1,4 +1,4 @@
-
+#!/bin/env python3
 import tkinter as tk
 from tkinter import DISABLED, NORMAL, ttk
 from tkinter import messagebox
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from collections import deque
 import threading
-from faive_system.src.hand_control.hand_control.hand_controller import HandController
+from faive_system.src.hand_control.hand_controller import HandController
 
 np.set_printoptions(precision=3, suppress=True)
 
@@ -403,11 +403,12 @@ class GraspGUI:
 @click.command()
 @click.option('--debug', is_flag=True, default=False, help='Debug mode.')
 @click.option('--calibrate', is_flag=True, default=False, help='Calibration mode')
+@click.option('--sim', is_flag=True, default=False, help='use MuJoCo simulation')
 def main(debug, calibrate, sim):
     if sim:
         hc = HandControllerMujocoSim()
     else:
-        hc = HandController("")
+        hc = HandController(port="/dev/ttyUSB0")
     hc.init_joints(calibrate=calibrate)
 
     gui = GraspGUI(hc, debug=debug, calibrate=calibrate, sim=sim)

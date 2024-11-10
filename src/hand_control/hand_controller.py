@@ -4,12 +4,12 @@ from click import getchar
 import yaml
 import os
 import cvxopt
-import simplified_finger_kinematics as fk
+import faive_system.src.hand_control.simplified_finger_kinematics as fk
 import sympy as sym
 from threading import Thread, RLock, Event
-from joint_ekf import EKF
+from .joint_ekf import EKF
 from faive_system.src.common.utils import get_datetime_str
-from dynamixel_client import *
+from .dynamixel_client import *
 
 np.set_printoptions(precision=3, suppress=True)
 
