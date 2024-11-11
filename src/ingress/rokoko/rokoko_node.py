@@ -37,7 +37,14 @@ class RokokoNode(Node):
 
     def timer_publish_cb(self):
 
-        keypoint_positions, timestamp = self.tracker.get_keypoint_positions()
+        key_points = self.tracker.get_keypoint_positions()
+        wait_cnt = 1
+        while (key_points is None):
+            if (wait_cnt % 10):
+                print("waiting for hand tracker")
+            wait_cnt+=1
+            key_points = self.tracker.get_keypoint_positions()
+        keypoint_positions, timestamp = key_points
 
         keypoint_positions_msg = numpy_to_float32_multiarray(keypoint_positions)
         self.ingress_mano_pub.publish(keypoint_positions_msg)

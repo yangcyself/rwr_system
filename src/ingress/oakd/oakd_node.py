@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
 from threading import RLock
-from oakd_ingress import OakDDriver
+from oakd_ingress import OakDDriver, OAK_CAMS_LIST
 from copy import deepcopy
 import time
 
@@ -28,11 +28,11 @@ class OakDPublisher(Node):
         self.bridge = CvBridge()
         camera_dict = {}
         if enable_front_camera:
-            camera_dict["front_view"] = OakDDriver.FRONT_CAMERA
+            camera_dict["front_view"] = OAK_CAMS_LIST["FRONT_CAMERA"]
         if enable_side_camera:
-            camera_dict["side_view"] = OakDDriver.SIDE_CAMERA
+            camera_dict["side_view"] = OAK_CAMS_LIST["SIDE_CAMERA"]
         if enable_wrist_camera:
-            camera_dict["wrist_view"] = OakDDriver.WRIST_CAMERA
+            camera_dict["wrist_view"] = OAK_CAMS_LIST["WRIST_CAMERA"]
         self.camera_dict = camera_dict
         self.visualize = self.get_parameter("visualize").value
 

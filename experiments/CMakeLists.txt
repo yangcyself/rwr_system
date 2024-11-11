@@ -27,6 +27,10 @@ install(PROGRAMS
     run_teleop_rokoko.py
   DESTINATION lib/${PROJECT_NAME}
 )
+install(PROGRAMS
+    grasp_gui.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # install the launch file
 install(DIRECTORY

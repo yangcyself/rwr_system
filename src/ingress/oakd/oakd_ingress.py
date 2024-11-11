@@ -9,7 +9,8 @@ import open3d as o3d
 import threading
 from oakd_utils import PointCloudVisualizer
 import numpy as np
-
+import yaml
+import os
 #!/usr/bin/env python3
 
 COLOR = True
@@ -118,17 +119,36 @@ class HostSync:
             return synced
         return False
 
+# Detect cameras and asign them according to oakd_cams.yaml
+available_cams = dai.Device.getAllAvailableDevices()
+print(f"Available devices: \n")
+for c in available_cams:
+    print(c)
+
+oakd_cams_file = os.path.join(os.path.dirname(__file__), "oakd_cams.yaml")
+with open(oakd_cams_file, "r") as cfgf:
+    oakd_cams = yaml.load(cfgf, Loader=yaml.FullLoader)
+
+OAK_CAMS_LIST = {} #from name to id
+
+for c in available_cams:
+    # print(type(c.mxid), c.mxid)
+    if c.mxid in oakd_cams.keys():
+        OAK_CAMS_LIST[oakd_cams[c.mxid]] = c.mxid
+    else:
+        print(f"WARNING! Camera {c.mxid} detected but not configed in ${oakd_cams_file}")
+
+for mxid in set(oakd_cams.keys()).difference([c.mxid for c in available_cams]):
+    print(f"WARNING! Camera {mxid} is listed in config file but not currently detected")
+
+print("OAK_CAMS_LIST", OAK_CAMS_LIST)
 
 class OakDDriver:
-    FRONT_CAMERA = "1844301071E8870E00"
-    WRIST_CAMERA = "XXX"
-    SIDE_CAMERA = "1844301021883CF500"
 
     def __init__(
         self, callback, visualize=True, device_mxid=None, camera_name=None
     ) -> None:
         print(f"Using OAK-D device {device_mxid}")
-        print(f"Available devices: {dai.Device.getAllAvailableDevices()}")
         print(f"Using camera: {camera_name}")
 
         self.visualize = visualize

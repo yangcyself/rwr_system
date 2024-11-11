@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": True, "side_view": False, "wrist_view": False}
+cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
 
 def generate_launch_description():
@@ -16,7 +16,7 @@ def generate_launch_description():
                 package="ingress",
                 executable="oakd_node.py",
                 name="oakd_node",
-                output="screen",
+                output="log",
                 parameters=[
                     {"enable_front_camera": cameras["front_view"]},
                     {"enable_side_camera": cameras["side_view"]},
@@ -41,6 +41,7 @@ def generate_launch_description():
                 package="hand_control",
                 executable="hand_control_node.py",
                 name="hand_control_node",
+                output="screen"
             ),
             
             # RETARGET NODE

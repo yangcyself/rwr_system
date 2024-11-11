@@ -4,12 +4,12 @@ from click import getchar
 import yaml
 import os
 import cvxopt
-import simplified_finger_kinematics as fk
+import faive_system.src.hand_control.simplified_finger_kinematics as fk
 import sympy as sym
 from threading import Thread, RLock, Event
-from joint_ekf import EKF
+from .joint_ekf import EKF
 from faive_system.src.common.utils import get_datetime_str
-from dynamixel_client import *
+from .dynamixel_client import *
 
 np.set_printoptions(precision=3, suppress=True)
 
@@ -82,6 +82,7 @@ class HandController:
         compliant_test_mode: bool = False,
         max_motor_current: float = 200.0,
         dummy_mode: bool = False,
+        baudrate: int = 3000000
     ):
         """
         config_yml: path to the config file, relative to this source file
@@ -90,7 +91,6 @@ class HandController:
         compliant_test_mode: pull on all tendons lightly, disabling position control (useful for checking proprioception etc.)
         max_motor_current: maximum current allowed to be sent to the motors during position control
         """
-        baudrate = 3000000
 
         self.motor_lock = RLock()
         self.keep_running = Event()

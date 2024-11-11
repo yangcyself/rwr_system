@@ -20,6 +20,7 @@ class HandControllerNode(Node):
 
         self._hc = HandController(port=port, baudrate=baudrate)
 
+        self._hc.init_joints(calibrate=False)
         self.joint_angle_sub = self.create_subscription(
             Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10
         )
@@ -29,12 +30,14 @@ class HandControllerNode(Node):
             len(msg.data)
         )
         joint_angles = np.array(msg.data)
-        self._hc.command_joint_angles(joint_angles)
+        joint_angles_deg = joint_angles * 180 / np.pi
+        self._hc.command_joint_angles(joint_angles_deg)
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = HandControllerNode()
+    
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
