@@ -57,7 +57,9 @@ all = [
     "mujoco", 
     "cv_bridge", 
     "drake", 
-    "cvxopt"
+    "cvxopt",
+    "mujoco-python-viewer", 
+    "mujoco"
 ]
 
 [tool.setuptools]
