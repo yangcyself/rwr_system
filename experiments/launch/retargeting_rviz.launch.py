@@ -31,6 +31,7 @@ def generate_launch_description():
                 executable="retargeter_node.py",
                 name="retargeter_node",
                 output="screen",
+                # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
                     # {
                     #     "retarget/mjcf_filepath": os.path.join(
