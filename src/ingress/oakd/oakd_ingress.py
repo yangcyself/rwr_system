@@ -106,10 +106,7 @@ class HostSync:
                 if msg.getSequenceNum() == obj["seq"]:
                     synced[name] = obj["msg"]
                     break
-        # If there are 5 (all) synced msgs, remove all old msgs
-        # and return synced msgs
-        if len(synced) == 4:  # color, left, right, depth, nn
-            # Remove old msgs
+        if self.arrays.keys() == synced.keys():
             for name, arr in self.arrays.items():
                 for i, obj in enumerate(arr):
                     if obj["seq"] < msg.getSequenceNum():
@@ -117,17 +114,8 @@ class HostSync:
                     else:
                         break
             return synced
-        elif len(synced) == 1:
-            for name, arr in self.arrays.items():
-                for i, obj in enumerate(arr):
-                    if obj["seq"] < msg.getSequenceNum() - 5:
-                        arr.remove(obj)
-                    else:
-                        break
-            return synced
         else:
-            print("Not enough synced msgs")
-        return False
+            return False
 
 # Detect cameras and asign them according to oakd_cams.yaml
 available_cams = dai.Device.getAllAvailableDevices()
@@ -189,7 +177,7 @@ class OakDDriver:
 
     def run(self, device):
         with device:
-            if device.getDeviceInfo().name == "1.5":
+            if (device.getOutputQueue("depth", maxSize=1, blocking=False ).tryGet()) is None:
                 has_depth = False
                 print("OAK-1.5 detected")
             else:
@@ -244,18 +232,21 @@ class OakDDriver:
                     new_msg = q.tryGet()
                     if new_msg is not None:
                         msgs = sync.add_msg(q.getName(), new_msg)
-                        print("msgs", msgs)
                         if msgs:
                             if has_depth:
-                                depth = msgs["depth"].getFrame()
+                                try:
+                                    depth = msgs["depth"].getFrame()
+                                    color = msgs["colorize"].getCvFrame()
+                                    rectified_left = msgs["rectified_left"].getCvFrame()
+                                    rectified_right = msgs["rectified_right"].getCvFrame()
+                                except Exception as e:
+                                    print(e)
+                                    continue
                             color = msgs["colorize"].getCvFrame()
-                            print("color shape", color.shape)
 
                             if self.visualize:
                                 cv2.imshow("color", color)
                                 if has_depth:
-                                    rectified_left = msgs["rectified_left"].getCvFrame()
-                                    rectified_right = msgs["rectified_right"].getCvFrame()
                                     depth_vis = cv2.normalize(
                                         depth, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1
                                     )
@@ -268,7 +259,7 @@ class OakDDriver:
                                     cv2.imshow("rectified_right", rectified_right)
 
                             rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-                            if has_depth:
+                            if has_depth and self.visualize and depth is not None:
                                 pcd, rgbd = pcl_converter.rgbd_to_projection(depth, rgb)
 
                             if self.visualize and has_depth:
