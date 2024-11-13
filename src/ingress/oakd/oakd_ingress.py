@@ -117,6 +117,16 @@ class HostSync:
                     else:
                         break
             return synced
+        elif len(synced) == 1:
+            for name, arr in self.arrays.items():
+                for i, obj in enumerate(arr):
+                    if obj["seq"] < msg.getSequenceNum() - 5:
+                        arr.remove(obj)
+                    else:
+                        break
+            return synced
+        else:
+            print("Not enough synced msgs")
         return False
 
 # Detect cameras and asign them according to oakd_cams.yaml
@@ -169,6 +179,8 @@ class OakDDriver:
     def run_thread(self):
         if self.device_mxid is None:
             device = dai.Device(pipeline)
+            print("No device specified, using first available device")
+            print("Devide Info: ", device.getDeviceInfo())
         else:
             device_info = dai.DeviceInfo(self.device_mxid)
             device = dai.Device(pipeline, device_info)
@@ -177,17 +189,24 @@ class OakDDriver:
 
     def run(self, device):
         with device:
-
+            if device.getDeviceInfo().name == "1.5":
+                has_depth = False
+                print("OAK-1.5 detected")
+            else:
+                has_depth = True
+                print("OAK-D detected")
+                
             device.setIrLaserDotProjectorBrightness(1200)
             qs = []
-            qs.append(device.getOutputQueue("depth", maxSize=1, blocking=False))
             qs.append(device.getOutputQueue("colorize", maxSize=1, blocking=False))
-            qs.append(
-                device.getOutputQueue("rectified_left", maxSize=1, blocking=False)
-            )
-            qs.append(
-                device.getOutputQueue("rectified_right", maxSize=1, blocking=False)
-            )
+            if has_depth:
+                qs.append(device.getOutputQueue("depth", maxSize=1, blocking=False))
+                qs.append(
+                    device.getOutputQueue("rectified_left", maxSize=1, blocking=False)
+                )
+                qs.append(
+                    device.getOutputQueue("rectified_right", maxSize=1, blocking=False)
+                )
 
             calibData = device.readCalibration()
             if COLOR:
@@ -212,8 +231,9 @@ class OakDDriver:
             self.intrinsics = intrinsics
             self.inv_intrinsics = np.linalg.inv(intrinsics)
             self.distortion_coeff = distortion_coeff
-
-            pcl_converter = PointCloudVisualizer(intrinsics, w, h, self.visualize)
+            
+            if has_depth:
+                pcl_converter = PointCloudVisualizer(intrinsics, w, h, self.visualize)
 
             serial_no = device.getMxId()
             sync = HostSync()
@@ -224,29 +244,34 @@ class OakDDriver:
                     new_msg = q.tryGet()
                     if new_msg is not None:
                         msgs = sync.add_msg(q.getName(), new_msg)
+                        print("msgs", msgs)
                         if msgs:
-                            depth = msgs["depth"].getFrame()
+                            if has_depth:
+                                depth = msgs["depth"].getFrame()
                             color = msgs["colorize"].getCvFrame()
+                            print("color shape", color.shape)
 
                             if self.visualize:
-                                rectified_left = msgs["rectified_left"].getCvFrame()
-                                rectified_right = msgs["rectified_right"].getCvFrame()
-                                depth_vis = cv2.normalize(
-                                    depth, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1
-                                )
-                                depth_vis = cv2.equalizeHist(depth_vis)
-                                depth_vis = cv2.applyColorMap(
-                                    depth_vis, cv2.COLORMAP_HOT
-                                )
-                                cv2.imshow("depth", depth_vis)
                                 cv2.imshow("color", color)
-                                cv2.imshow("rectified_left", rectified_left)
-                                cv2.imshow("rectified_right", rectified_right)
+                                if has_depth:
+                                    rectified_left = msgs["rectified_left"].getCvFrame()
+                                    rectified_right = msgs["rectified_right"].getCvFrame()
+                                    depth_vis = cv2.normalize(
+                                        depth, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1
+                                    )
+                                    depth_vis = cv2.equalizeHist(depth_vis)
+                                    depth_vis = cv2.applyColorMap(
+                                        depth_vis, cv2.COLORMAP_HOT
+                                    )
+                                    cv2.imshow("depth", depth_vis)
+                                    cv2.imshow("rectified_left", rectified_left)
+                                    cv2.imshow("rectified_right", rectified_right)
 
                             rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-                            pcd, rgbd = pcl_converter.rgbd_to_projection(depth, rgb)
+                            if has_depth:
+                                pcd, rgbd = pcl_converter.rgbd_to_projection(depth, rgb)
 
-                            if self.visualize:
+                            if self.visualize and has_depth:
                                 pcl_converter.visualize_pcd()
 
                             if self.callback is not None:
@@ -258,19 +283,20 @@ class OakDDriver:
                 key = cv2.waitKey(1)
                 if key == ord("s"):
                     timestamp = str(int(time.time()))
-                    cv2.imwrite(f"{serial_no}_{timestamp}_depth.png", depth_vis)
                     cv2.imwrite(f"{serial_no}_{timestamp}_color.png", color)
-                    cv2.imwrite(
-                        f"{serial_no}_{timestamp}_rectified_left.png", rectified_left
-                    )
-                    cv2.imwrite(
-                        f"{serial_no}_{timestamp}_rectified_right.png", rectified_right
-                    )
-                    o3d.io.write_point_cloud(
-                        f"{serial_no}_{timestamp}.pcd",
-                        pcl_converter.pcl,
-                        compressed=True,
-                    )
+                    if has_depth:
+                        cv2.imwrite(f"{serial_no}_{timestamp}_depth.png", depth_vis)
+                        cv2.imwrite(
+                            f"{serial_no}_{timestamp}_rectified_left.png", rectified_left
+                        )
+                        cv2.imwrite(
+                            f"{serial_no}_{timestamp}_rectified_right.png", rectified_right
+                        )
+                        o3d.io.write_point_cloud(
+                            f"{serial_no}_{timestamp}.pcd",
+                            pcl_converter.pcl,
+                            compressed=True,
+                        )
                 elif key == ord("q"):
                     break
 
