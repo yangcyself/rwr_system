@@ -3,22 +3,23 @@
 import rclpy
 from rclpy.node import Node
 import rosbag2_py
-import yaml
-from pathlib import Path
-from datetime import datetime
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from bag2h5_converter import convert_to_h5
 from rclpy.serialization import serialize_message
+from pathlib import Path
+from datetime import datetime
 
 # Define supported topics and message types
-topics_types = {
+TOPICS_TYPES = {
     "/franka/end_effector_pose": PoseStamped,
+    "/franka/end_effector_pose_cmd": PoseStamped,
     "/hand/policy_output": Float32MultiArray,
     "/oakd_front_view/color": Image,
     "/oakd_side_view/color": Image,
     "/oakd_wrist_view/color": Image,
+    "/task_description": String,  # New topic for task description
 }
 
 class DemoLogger(Node):
@@ -28,13 +29,14 @@ class DemoLogger(Node):
         
         self.base_path = Path(base_path)
         self.task_name = None
+        self.task_description = None
         self.writer = None
         self.topics_to_record = topics_to_record
+        self.task_description_topic = "/task_description"
         
-        if not self.topics_to_record:
-            self.get_logger().error("No topics specified to record. Check the configuration file.")
-            return
-
+        if self.task_description_topic not in self.topics_to_record:
+            self.topics_to_record.append(self.task_description_topic)
+        
         # Ensure the base directory exists
         if not self.base_path.exists():
             self.base_path.mkdir(parents=True, exist_ok=True)
@@ -54,11 +56,16 @@ class DemoLogger(Node):
         else:
             self.get_logger().info(f"Directory '{task_folder}' already exists.")
         
+        self.task_description = input("Enter a description for the task: ")
+        
         # Confirm and start recording
         if input("Start recording? (y/n): ").strip().lower() == 'y':
             # folder inside the task folder
             task_folder_bag = task_folder / "rosbag2"
             self.start_recording(task_folder_bag)
+
+            # Publish task description as a String message
+            self.publish_task_description(self.task_description)
 
             # Wait for user to stop recording
             input("Press Enter to stop recording...")
@@ -79,6 +86,14 @@ class DemoLogger(Node):
                 self.get_logger().info("Recording discarded.")
                 self.delete_recording(task_folder_bag)
 
+    def publish_task_description(self, description):
+        # Create a publisher for the task description topic
+        description_pub = self.create_publisher(String, self.task_description_topic, 10)
+        msg = String()
+        msg.data = description
+        description_pub.publish(msg)
+        self.get_logger().info(f"Task description published: {description}")
+
     def start_recording(self, task_folder_bag):
         if not self.topics_to_record:
             self.get_logger().error("No topics specified to record. Check the configuration file.")
@@ -96,7 +111,7 @@ class DemoLogger(Node):
         # Add topics to be recorded
         self.subscribers = []
         for topic_name in self.topics_to_record:
-            topic_type = topics_types.get(topic_name)
+            topic_type = TOPICS_TYPES.get(topic_name)
             if not topic_type:
                 self.get_logger().error(f"Topic type for {topic_name} is not recognized.")
                 continue
@@ -140,6 +155,7 @@ class DemoLogger(Node):
         task_folder_bag.rmdir()
         self.get_logger().info(f"Recording deleted from folder: {task_folder_bag}")
 
+
 def main(args=None):
     # Define the base path for recordings
     base_path = "recordings"  # Modify this path as needed
@@ -158,6 +174,7 @@ def main(args=None):
         demo_logger.run_logger()
     demo_logger.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
