@@ -162,7 +162,7 @@ def process_folder(input_folder, sampling_frequency, topic_types):
 def main():
     parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
-    parser.add_argument("--sampling_freq", type=float, default=30, help="Sampling frequency in Hz.")
+    parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     args = parser.parse_args()
 
     # Process all files in the folder
