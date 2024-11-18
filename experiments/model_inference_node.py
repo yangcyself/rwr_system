@@ -17,10 +17,11 @@ from rwr_system.src.common.utils import numpy_to_float32_multiarray, float32_mul
 from srl_il.export.il_policy import get_policy_from_ckpt
 
 class CameraListener(Node):
-    def __init__(self, camera_topic, node):
+    def __init__(self, camera_topic, name, node):
         self.camera_topic = camera_topic
         self.lock = Lock()
         self.image = None
+        self.name = name
         self.im_subscriber = node.create_subscription(
             Image, self.camera_topic, self.recv_im, 10
         )
@@ -29,16 +30,17 @@ class CameraListener(Node):
         with self.lock:
             self.image = msg
 
+    def get_im(self):
+        with self.lock:
+            return deepcopy(self.image)
 
 class PolicyPlayerAgent(Node):
     def __init__(self):
         super().__init__("policy_publisher")
         
         self.declare_parameter("camera_topics", [])
-        self.declare_parameter("checkpoint_path", "")
         self.declare_parameter("policy_ckpt_path", "")   # assume the policy ckpt is saved with its config
-        self.camera_topics = self.get_parameter("camera_topics").value
-        self.checkpoint_path = self.get_parameter("checkpoint_path").value
+        self.camera_topics = self.get_parameter("camera_topics").value # tuples (topics, names)
         self.policy_ckpt_path = self.get_parameter("policy_ckpt_path").value
         
         self.lock = Lock()
@@ -58,7 +60,7 @@ class PolicyPlayerAgent(Node):
         )
 
         self.camera_listeners = [
-            CameraListener(camera_name, self) for camera_name in self.camera_topics
+            CameraListener(camera_topic, camera_name, self) for camera_topic, camera_name in self.camera_topics
         ]
         
         self.bridge = CvBridge()
@@ -103,26 +105,25 @@ class PolicyPlayerAgent(Node):
     def get_current_observations(self):
         obs_dict = {}
         get_data_success = True
-        with self.lock:
-            images = [deepcopy(camera.image) for camera in self.camera_listeners]
-            img_data = []
-            for idx, image in enumerate(images):
-                try:
-                    img = self.bridge.imgmsg_to_cv2(image, "bgr8")
-                    img_data.append(img)
-                    self.get_logger().info(
-                        f"Appended image from camera {self.camera_names[idx]} at position {idx}"
-                    )
-                except CvBridgeError as e:
-                    self.get_logger().error(f"CvBridgeError: {e}")
+        
+        images = {camera.name: camera.get_im() for camera in self.camera_listeners}
+        if any([im is None for im in images.values()]):
+            get_data_success = False
+            return get_data_success, obs_dict
 
-            img_data = np.asarray(img_data)
+        images = {
+            k: self.bridge.imgmsg_to_cv2(v, "bgr8").transpose(2, 0, 1)/255.0
+            for k, v in images.items()
+        }
+
+        with self.lock:
             wrist_pose = self.current_wrist_state
             hand_state = self.current_hand_state
-            qpos = np.concatenate(
-                [wrist_pose, hand_state.flatten()]
-            )
-            return get_data_success, obs_dict
+        
+        qpos = np.concatenate(
+            [wrist_pose, hand_state.flatten()]
+        )
+        return get_data_success, obs_dict
     
     def run_policy_cb(self):
 
@@ -133,8 +134,8 @@ class PolicyPlayerAgent(Node):
         with torch.inference_mode():
             obs_dict = {k: torch.tensor(v).float().unsqueeze(0) for k, v in obs_dict.items()} # add batch dimension
             action = self.policy.predict_action(obs_dict)
-            wrist_action = action[0, :6].cpu().numpy()
-            hand_action = action[0, 6:].cpu().numpy()
+            wrist_action = action[0, :7].cpu().numpy()
+            hand_action = action[0, 7:].cpu().numpy()
         self.publish(wrist_action, hand_action)
 
 def main(args=None):
