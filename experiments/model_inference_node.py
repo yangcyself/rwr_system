@@ -123,6 +123,9 @@ class PolicyPlayerAgent(Node):
         qpos = np.concatenate(
             [wrist_pose, hand_state.flatten()]
         )
+
+        obs_dict.update(images)
+        obs_dict["qpos"] = qpos
         return get_data_success, obs_dict
     
     def run_policy_cb(self):
